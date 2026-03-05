@@ -369,9 +369,14 @@ def main():
         os.environ['WORLD_SIZE'] = str(args.world_size)
         os.environ['RANK'] = str(args.local_rank)
         
-        # Decide backend based on available hardware
-        backend = "nccl" if torch.cuda.is_available() and not args.no_cuda else "gloo"
-        torch.distributed.init_process_group(backend=backend, init_method='env://')
+        backend = "gloo"  # CPU
+        dist.init_process_group(
+            backend=backend,
+            init_method=f"tcp://{args.master_ip}:{args.master_port}",
+            world_size=args.world_size,
+            rank=args.local_rank,
+        )
+        args.rank = args.local_rank
     # ############################################################
 
     args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
