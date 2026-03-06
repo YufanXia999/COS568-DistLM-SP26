@@ -58,7 +58,7 @@ def train(args, train_dataset, model, tokenizer):
     if args.local_rank == -1:
         train_sampler = RandomSampler(train_dataset)
     else:
-        train_sampler = ributedSampler(train_dataset, num_replicas=args.world_size, rank=args.local_rank)
+        train_sampler = DistributedSampler(train_dataset, num_replicas=args.world_size, rank=args.local_rank)
     # ####################################################################
 
     train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.train_batch_size)
@@ -88,7 +88,7 @@ def train(args, train_dataset, model, tokenizer):
     logger.info("  Num examples = %d", len(train_dataset))
     logger.info("  Num Epochs = %d", args.num_train_epochs)
     logger.info("  Instantaneous batch size per device = %d", args.per_device_train_batch_size)
-    logger.info("  Total train batch size (w. parallel, ributed & accumulation) = %d",
+    logger.info("  Total train batch size (w. parallel, distributed & accumulation) = %d",
                    args.train_batch_size * args.gradient_accumulation_steps * (args.world_size if args.local_rank != -1 else 1))
     logger.info("  Gradient Accumulation steps = %d", args.gradient_accumulation_steps)
     logger.info("  Total optimization steps = %d", t_total)
@@ -350,8 +350,8 @@ def main():
     parser.add_argument('--fp16', action='store_true', help="Whether to use 16-bit (mixed) precision")
     parser.add_argument('--fp16_opt_level', type=str, default='O1', help="For fp16: Apex AMP optimization level")
     
-    # ### NEW/MODIFIED FOR PART 2(a): ributed arguments ###
-    parser.add_argument("--local_rank", type=int, default=-1, help="For ributed training: local_rank.")
+    # ### NEW/MODIFIED FOR PART 2(a): distributed arguments ###
+    parser.add_argument("--local_rank", type=int, default=-1, help="For distributed training: local_rank.")
     parser.add_argument("--master_ip", type=str, default="127.0.0.1", help="Master node IP address")
     parser.add_argument("--master_port", type=str, default="29500", help="Master node port")
     parser.add_argument("--world_size", type=int, default=1, help="Total number of participating workers")
