@@ -145,7 +145,7 @@ def train(args, train_dataset, model, tokenizer):
                     
                     if args.local_rank == 0:
                         gather_list = [torch.zeros_like(grad_tensor) for _ in range(args.world_size)]
-                        torch.ributed.gather(grad_tensor, gather_list, dst=0)
+                        torch.distributed.gather(grad_tensor, gather_list, dst=0)
                         
                         # Average the gathered gradients
                         avg_grad = sum(gather_list) / args.world_size
@@ -153,11 +153,11 @@ def train(args, train_dataset, model, tokenizer):
                         # Prepare list for scattering
                         scatter_list = [avg_grad.clone() for _ in range(args.world_size)]
                     else:
-                        torch.ributed.gather(grad_tensor, dst=0)
+                        torch.distributed.gather(grad_tensor, dst=0)
                         scatter_list = None
 
                     # Scatter the averaged gradient back to all workers
-                    torch.ributed.scatter(grad_tensor, scatter_list, src=0)
+                    torch.distributed.scatter(grad_tensor, scatter_list, src=0)
                     
                     # Update local gradients with the synced version
                     p.grad.data.copy_(grad_tensor)
@@ -267,7 +267,7 @@ def evaluate(args, model, tokenizer, prefix=""):
 
 def load_and_cache_examples(args, task, tokenizer, evaluate=False):
     if args.local_rank not in [-1, 0]:
-        torch.ributed.barrier()
+        torch.distributed.barrier()
 
     processor = processors[task]()
     output_mode = output_modes[task]
@@ -301,7 +301,7 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
             torch.save(features, cached_features_file)
 
     if args.local_rank == 0:
-        torch.ributed.barrier()
+        torch.distributed.barrier()
 
     all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
     all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
