@@ -214,7 +214,7 @@ def evaluate(args, model, tokenizer, prefix=""):
         eval_dataset = load_and_cache_examples(args, eval_task, tokenizer, evaluate=True)
 
         if not os.path.exists(eval_output_dir) and args.local_rank in [-1, 0]:
-            os.makedirs(eval_output_dir)
+            os.makedirs(eval_output_dir, exist_ok=True)
 
         args.eval_batch_size = args.per_device_eval_batch_size
         eval_sampler = SequentialSampler(eval_dataset)
